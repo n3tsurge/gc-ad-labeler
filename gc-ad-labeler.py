@@ -1,3 +1,4 @@
+import time
 import logging
 from argparse import ArgumentParser
 from pyaml_env import parse_config
@@ -68,6 +69,9 @@ def get_computers(server_name: str, username: str, password: str, base_dn: str, 
 
 
 if __name__ == "__main__":
+    # Set the logging format
+    logging.basicConfig(
+        format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
 
     parser = ArgumentParser()
     parser.add_argument('--config', help="The path to the configuration file", default="config.yml", required=False)
@@ -97,47 +101,54 @@ if __name__ == "__main__":
         logging.error(exc)
         exit(1)
 
-    for rule in config['rules']:
-        rule_config = config['rules'][rule]
-        domain_config = config['domains'][rule_config['domain']]
+    while True:
+        for rule in config['rules']:
+            rule_config = config['rules'][rule]
+            domain_config = config['domains'][rule_config['domain']]
 
-        
-        computers = get_computers(
-            server_name=domain_config['server'],
-            base_dn=domain_config['base_dn'],
-            username=domain_config['bind_user'],
-            password=domain_config['bind_password'],
-            target_dn=rule_config['target_dn']
-        )
+            logging.info(f'Fetching computers for {rule}')
+            computers = get_computers(
+                server_name=domain_config['server'],
+                base_dn=domain_config['base_dn'],
+                username=domain_config['bind_user'],
+                password=domain_config['bind_password'],
+                target_dn=rule_config['target_dn']
+            )
 
-        guardicore_agent_ids = []
+            guardicore_agent_ids = []
 
-        for computer in computers:
-            agent_info = centra.list_agents(gc_filter=computer)
-            if len(agent_info) > 0:
-                guardicore_agent_ids.append(agent_info[0]['asset_id'])
+            for computer in computers:
+                agent_info = centra.list_agents(gc_filter=computer)
+                if len(agent_info) > 0:
+                    guardicore_agent_ids.append(agent_info[0]['asset_id'])
 
-        number_of_agents = len(guardicore_agent_ids)
+            number_of_agents = len(guardicore_agent_ids)
 
-        for key in rule_config['labels']:
+            for key in rule_config['labels']:
 
-            value = rule_config['labels'][key]
+                changed=False
+                value = rule_config['labels'][key]
 
-            label_data = centra.list_labels(key=key, value=value, find_matches=True)
-            if len(label_data) > 0:
-                new_agents = [a for a in guardicore_agent_ids if a not in [b['id'] for b in label_data[0]['added_assets']]]
+                label_data = centra.list_labels(key=key, value=value, find_matches=True)
+                if len(label_data) > 0:
+                    new_agents = [a for a in guardicore_agent_ids if a not in [b['id'] for b in label_data[0]['added_assets']]]
 
-                # Determine what agents are no longer valid
-                old_agents = [b['id'] for b in label_data[0]['added_assets'] if b['id'] not in guardicore_agent_ids]
+                    # Determine what agents are no longer valid
+                    old_agents = [b['id'] for b in label_data[0]['added_assets'] if b['id'] not in guardicore_agent_ids]
 
-                if len(old_agents) > 0:
-                    if centra.remove_asset_from_label(key, value, old_agents):
-                        logging.info(f"Removed {len(old_agents)} from label {key}: {value}")
-                
-                logging.info("Labeling {number_of_agents} with \"{key}: {value}")
-                if len(new_agents) > 0:
-                    centra.create_static_label(key, value, new_agents)
-                    logging.info(f"Labeled {len(old_agents)} with label {key}: {value}")
-            else:
-                logging.info("Labeled {number_of_agents} with \"{key}: {value}")
-                centra.create_static_label(key, value, guardicore_agent_ids)
+                    if len(old_agents) > 0:
+                        if centra.remove_asset_from_label(key, value, old_agents):
+                            logging.info(f"Removed {len(old_agents)} from label {key}: {value}")
+                    
+                    if len(new_agents) > 0:
+                        centra.create_static_label(key, value, new_agents)
+                        logging.info(f"Labeled {len(new_agents)} with label {key}: {value}")
+                        changed=True
+
+                    if not changed:
+                        logging.info(f"No changes for {key}: {value}")
+                else:
+                    logging.info(f"Labeled {number_of_agents} with {key}: {value}")
+                    centra.create_static_label(key, value, guardicore_agent_ids)
+
+        time.sleep(config['poll_interval'])

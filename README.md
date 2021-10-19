@@ -4,7 +4,7 @@ Labels assets in Guardicore based on their AD group membership or OU membership.
 
 ## Future Features
 
-- [ ] Continuous labeling
+- [x] Continuous labeling
 - [ ] Per rule labeling interval
 
 ## Usage
