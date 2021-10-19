@@ -11,7 +11,7 @@ Labels assets in Guardicore based on their AD group membership or OU membership.
 
 1. clone the repository `git clone git@github.com:n3tsurge/gc-ad-labeler.git`
 2. Install the dependencies `pipenv install`
-3. Setup your labeling rules in `config.yml`
+3. Setup your labeling rules in `config.yml` (copy `config.yml.sample` as a starting point)
 4. Run `pipenv run python gc-ad-labeler.py`
 
 ```bash

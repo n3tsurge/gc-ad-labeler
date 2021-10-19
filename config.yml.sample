@@ -1,3 +1,4 @@
+poll_interval: 1800 # Every 30 minutes
 guardicore:
   management_url: "cus-NNNN.cloud.guardicore.com"
   username: "gc-api"
