@@ -1,0 +1,18 @@
+guardicore:
+  management_url: "cus-NNNN.cloud.guardicore.com"
+  username: "gc-api"
+  password: "supersecretpassword"
+
+domains:
+  consoto.com:
+    server: dc01.contoso.com
+    base_dn: DC=contoso,DC=com
+    bind_user: 
+    bind_password:
+  
+rules:
+  label-domain-admin-computers:
+    target_dn: OU=Admins,OU=Workstations,DC=contoso,DC=com
+    domain: contoso.com
+    labels:
+      Active Directory Admin: 'Yes'
