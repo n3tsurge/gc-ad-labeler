@@ -2,6 +2,11 @@
 
 Labels assets in Guardicore based on their AD group membership or OU membership.
 
+## Future Features
+
+- [ ] Continuous labeling
+- [ ] Per rule labeling interval
+
 ## Usage
 
 1. clone the repository `git clone git@github.com:n3tsurge/gc-ad-labeler.git`
