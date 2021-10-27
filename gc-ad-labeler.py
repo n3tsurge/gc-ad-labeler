@@ -55,7 +55,7 @@ def get_computers(server_name: str, username: str, password: str, base_dn: str, 
     else:
         server = Server(server_name)
 
-    connection = Connection(server, username, password, client_strategy=SAFE_SYNC, auto_bind=True)
+    connection = Connection(server, username, password, client_strategy=SAFE_SYNC, auto_bind=True, auto_referrals=False)
 
     # Gets all the computer objects in a specified OU and returns
     # a list of computer names
@@ -104,16 +104,24 @@ if __name__ == "__main__":
     while True:
         for rule in config['rules']:
             rule_config = config['rules'][rule]
-            domain_config = config['domains'][rule_config['domain']]
 
-            logging.info(f'Fetching computers for {rule}')
-            computers = get_computers(
-                server_name=domain_config['server'],
-                base_dn=domain_config['base_dn'],
-                username=domain_config['bind_user'],
-                password=domain_config['bind_password'],
-                target_dn=rule_config['target_dn']
-            )
+            computers = []
+
+            for domain in rule_config['domains']:
+           
+                domain_config = config['domains'][domain]
+
+                logging.info(f'Fetching computers for {rule} from {domain}')
+
+                target_dn = rule_config['domains'][domain]['target_dn']
+
+                computers += get_computers(
+                    server_name=domain_config['server'],
+                    base_dn=domain_config['base_dn'],
+                    username=domain_config['bind_user'],
+                    password=domain_config['bind_password'],
+                    target_dn=target_dn
+                )
 
             guardicore_agent_ids = []
 

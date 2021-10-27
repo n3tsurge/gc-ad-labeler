@@ -13,7 +13,10 @@ domains:
   
 rules:
   label-domain-admin-computers:
-    target_dn: OU=Admins,OU=Workstations,DC=contoso,DC=com
-    domain: contoso.com
+    domains:
+      contoso.com:
+        target_dn: OU=Admins,OU=Workstations,DC=contoso,DC=com
+      example.com:
+        target_dn: OU=Workstation Admins,DC=example,DC=com
     labels:
       Active Directory Admin: 'Yes'
